@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'main.dart' show kEspresso, kBrass, kPaper, kMuted;
+
 /// Searches the Cloud Firestore collection "books" by title and shows the
 /// matching book. Books are added manually in the Firebase Console; this
 /// screen only reads from Firestore and never writes to it.
@@ -101,7 +103,48 @@ class _BookSearchScreenState extends State<BookSearchScreen> {
     }
   }
 
+  // Shelf banner above the search box
+  Widget _buildBanner() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: kEspresso,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: const Row(
+        children: [
+          Text('📚', style: TextStyle(fontSize: 40)),
+          SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'The Reading Room',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Type a title to look it up on the shelves.',
+                  style: TextStyle(color: Color(0xFFD9C7B0), fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSearchBar() {
+    OutlineInputBorder border(Color c, [double w = 1]) => OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: BorderSide(color: c, width: w),
+        );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -111,23 +154,26 @@ class _BookSearchScreenState extends State<BookSearchScreen> {
           onSubmitted: (_) {
             if (!_searching) _searchBook();
           },
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: "Enter Book Title",
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.menu_book),
+            prefixIcon: const Icon(Icons.menu_book, color: kBrass),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: kPaper,
+            border: border(const Color(0xFFDCCBB3)),
+            enabledBorder: border(const Color(0xFFDCCBB3)),
+            focusedBorder: border(kBrass, 2),
           ),
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 48,
-          child: ElevatedButton.icon(
+          height: 50,
+          child: FilledButton.icon(
             onPressed: _searching ? null : _searchBook,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurple,
+            style: FilledButton.styleFrom(
+              backgroundColor: kEspresso,
               foregroundColor: Colors.white,
-              disabledBackgroundColor: Colors.deepPurple.shade200,
+              disabledBackgroundColor: kMuted,
+              shape: const StadiumBorder(),
             ),
             icon: const Icon(Icons.search),
             label: const Text("Search"),
@@ -137,49 +183,115 @@ class _BookSearchScreenState extends State<BookSearchScreen> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(IconData icon, String label, Widget value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Icon(icon, size: 18, color: kBrass),
+          const SizedBox(width: 10),
           SizedBox(
-            width: 140,
+            width: 130,
             child: Text(
-              "$label:",
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              label,
+              style: const TextStyle(color: kMuted, fontSize: 13),
             ),
           ),
-          Expanded(child: Text(value)),
+          Expanded(child: value),
         ],
       ),
     );
   }
 
+  // Result shown as a book: brass spine on the left, details on the page
   Widget _buildBookCard(Map<String, dynamic> book) {
     final copies = _parseCopies(book['copies']);
+    final available = copies != null && copies > 0;
     return Card(
-      color: Colors.white,
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      color: kPaper,
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: const BorderSide(color: Color(0xFFE3D3BA)),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildDetailRow("Title", "${book['title'] ?? '-'}"),
-            _buildDetailRow("Author", "${book['author'] ?? '-'}"),
-            _buildDetailRow("Copies Available", "${copies ?? '-'}"),
-            if (copies == 0) ...[
-              const SizedBox(height: 8),
-              const Text(
-                "Not Available – All Copies Issued",
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+            Container(width: 14, color: kBrass),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "${book['title'] ?? '-'}",
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: kEspresso,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Divider(color: Color(0xFFE3D3BA), height: 1),
+                    const SizedBox(height: 6),
+                    _buildDetailRow(
+                      Icons.person_outline,
+                      "Author",
+                      Text(
+                        "${book['author'] ?? '-'}",
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    _buildDetailRow(
+                      Icons.inventory_2_outlined,
+                      "Copies Available",
+                      Text(
+                        "${copies ?? '-'}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 18,
+                          color: kEspresso,
+                        ),
+                      ),
+                    ),
+                    if (available) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'In stock',
+                          style: TextStyle(
+                            color: Colors.green.shade800,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                    if (copies == 0) ...[
+                      const SizedBox(height: 8),
+                      const Text(
+                        "Not Available – All Copies Issued",
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-            ],
+            ),
           ],
         ),
       ),
@@ -190,7 +302,7 @@ class _BookSearchScreenState extends State<BookSearchScreen> {
     if (_searching) {
       return const Padding(
         padding: EdgeInsets.all(24),
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(child: CircularProgressIndicator(color: kBrass)),
       );
     }
     if (_book != null) return _buildBookCard(_book!);
@@ -201,7 +313,7 @@ class _BookSearchScreenState extends State<BookSearchScreen> {
           _message,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: _isError ? Colors.red : Colors.black87,
+            color: _isError ? Colors.red : kEspresso,
             fontSize: 16,
           ),
         ),
@@ -213,12 +325,7 @@ class _BookSearchScreenState extends State<BookSearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      appBar: AppBar(
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
-        title: const Text("Library Book Search"),
-      ),
+      appBar: AppBar(title: const Text("Library Book Search")),
       body: SafeArea(
         child: Align(
           alignment: Alignment.topCenter,
@@ -230,6 +337,8 @@ class _BookSearchScreenState extends State<BookSearchScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  _buildBanner(),
+                  const SizedBox(height: 18),
                   _buildSearchBar(),
                   const SizedBox(height: 20),
                   _buildResult(),

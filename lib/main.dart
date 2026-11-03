@@ -4,6 +4,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'book_search_screen.dart';
 import 'firebase_options.dart';
 
+// Palette: espresso leather, parchment pages, brass details
+const Color kEspresso = Color(0xFF3B2A20);
+const Color kParchment = Color(0xFFF5EBD7);
+const Color kBrass = Color(0xFFB8860B);
+const Color kPaper = Color(0xFFFFFAF0);
+const Color kMuted = Color(0xFF8B7766);
+
 Future<void> main() async {
   // Required before calling native code (Firebase) ahead of runApp().
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +42,14 @@ class LibraryApp extends StatelessWidget {
       title: 'Library Book Search',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: kBrass),
+        scaffoldBackgroundColor: kParchment,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: kEspresso,
+          foregroundColor: Colors.white,
+          centerTitle: true,
+          elevation: 0,
+        ),
         useMaterial3: true,
       ),
       home: initError == null
@@ -55,11 +69,7 @@ class _FirebaseErrorScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
-        title: const Text('Library Book Search'),
-      ),
+      appBar: AppBar(title: const Text('Library Book Search')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
